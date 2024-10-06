@@ -1,0 +1,89 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <unordered_set>
+#include <tuple>
+
+bool canTransform(const std::string& start, const std::string& target) {
+    if (start.length() != target.length()) return false;
+
+    for (size_t i = 0; i < start.length(); ++i) {
+        if (start[i] != '*' && start[i] != target[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+int main() {
+    std::ifstream file("input.csv");
+    if (!file.is_open()) {
+        std::cerr << "Error opening file!" << std::endl;
+        return 1; // Returnează cu eroare dacă fișierul nu poate fi deschis
+    }
+
+    std::string line;
+    std::vector<std::tuple<int, std::string, std::string>> data;
+    
+    // Citim fișierul CSV
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string code, startWord, targetWord;
+        std::getline(ss, code, ';');
+        std::getline(ss, startWord, ';');
+        std::getline(ss, targetWord, ';');
+
+        data.emplace_back(std::stoi(code), startWord, targetWord);
+    }
+    
+    // Dicționar de cuvinte pentru verificare
+    std::unordered_set<std::string> dictionary = {
+        "ICONOGRAFĂ", "FAGOCITUL", "APICOLILOR", "HIPOPLAZII", "PROHODI", "CIOPLEA",
+        "COVÂRȘITELOR", "PÂRGUIRILE", "BURGHIERILE", "SAMAVOLNICII", "CĂȘĂIEȘTE",
+        "SISALUL", "CINERARIILE", "DEZAGLOMERĂM", "TETRODĂ", "MÂNJITURII",
+        "DESOFISTICĂRII", "TĂIERI", "GENTILEȚILOR", "NENOROCITUL", "ÎNAINTĂ",
+        "ISTMICUL", "ASCUȚITUNGHICUL", "OBNUBILĂRILOR", "BUMBĂCELULUI", "POSTĂVĂRIILE",
+        "CENTROZOMUL", "DEBAVURASE", "VRAMIȚE", "RETORI", "EPISTOLARELOR",
+        "ÎNCHIABUREAȚI", "LAMINATOAREA", "PLATINEZ", "ȚĂNDĂRELEI", "TEVATURI",
+        "FIDANȚATA", "EXONDĂRILE", "DECOMANDATĂ", "OMAGIALI", "STÂLPISEM",
+        "ELFILOR", "DECONCERTANTELE", "GAGICULUI", "APELARĂM", "SPERMATOFITELOR",
+        "NECREDINCIOȘILOR", "CINSTEȚUL", "NEOFORMAȚIUNII", "PEGMATITUL", "PLUTUIEȘTE",
+        "CINTEZII", "FOLFĂIESC", "OTORINOLARINGOLOGELOR", "ESTETIZANTEI", "BALAOACHEȘĂ",
+        "NOTĂRIȚĂ", "DULEȚI", "RICKETTSIOZEI", "CIREȘE", "ZGĂRDAT",
+        "PREȚIOASELOR", "DIMPREJUR", "BULBUCAT", "ARIERDUNĂ", "FLACIDEI",
+        "CONVENȚIONALI", "CUCONIȚĂ", "NELINIȘTITORULUI", "BIHINDISIRILE", "ÎMPLINIREA",
+        "INSTIGÂND", "RECENTE", "EMBLEMĂ", "SINGURAȘUL", "SUBSECRETARULUI",
+        "DEVITALIZASERĂM", "SUBAPRECIEZ", "CLASATULUI", "FARAONICUL", "ÎNROLĂRILOR",
+        "PRIMEZIU", "CRUCIATULUI", "PRODIGATELE", "VINA", "CIFRARĂM",
+        "ÎNFRUNTASEM", "VIOȘELI", "AMUȘISERĂȚI", "TELEGRAFIARĂ", "BASCHETBALIȘTILOR",
+        "SEPTICUL", "VENENO", "GUDRONĂM", "CORDENCIULUI", "STROPȘIRE",
+        "FOILETONIST", "PLICISERĂ", "ACHITAT"
+    };
+
+    // Procesăm fiecare linie
+    for (const auto& entry : data) {
+        int code;
+        std::string startWord, targetWord;
+        std::tie(code, startWord, targetWord) = entry;
+
+        int attempts = 0;
+
+        for (const auto& word : dictionary) {
+            if (canTransform(startWord, word)) {
+                attempts++;
+                if (word == targetWord) {
+                    std::cout << "Code: " << code << " - Found target word: " << targetWord << std::endl;
+                    break;
+                }
+            }
+            if (attempts >= 1200) {
+                std::cout << "Exceeded attempts limit for code: " << code << std::endl;
+                break;
+            }
+        }
+    }
+
+    return 0;
+}
