@@ -1,66 +1,88 @@
 #include <bits/stdc++.h>
-std::string normalize(const std::string &word)
+using namespace std;
+struct Game
 {
-    std::string normalized = word;
-    std::string diacritics[] = {"ă", "â", "î", "ș", "ț", "Ă", "Â", "Î", "Ș", "Ț"};
-    std::string replacements[] = {"a", "a", "i", "s", "t", "A", "A", "I", "S", "T"};
-
-    for (size_t i = 0; i < sizeof(diacritics) / sizeof(diacritics[0]); ++i)
+    string pattern;
+    string target;
+};
+vector<Game> readCSV(const string& filename)
+{
+    vector<Game> games;
+    ifstream file(filename);
+    string line;
+    while (getline(file, line))
     {
-        std::string::size_type pos;
-        while ((pos = normalized.find(diacritics[i])) != std::string::npos)
+        stringstream ss(line);
+        Game game;
+        getline(ss, line, ';');
+        getline(ss, game.pattern, ';');
+        getline(ss, game.target);
+
+        games.push_back(game);
+    }
+    return games;
+}
+bool guessLetter(Game& game, char letter)
+{
+    bool found = false;
+    for (size_t i = 0; i < game.target.size(); i++)
+    {
+        if (game.target[i] == letter)
         {
-            normalized.replace(pos, diacritics[i].length(), replacements[i]);
+            game.pattern[i] = letter;
+            found = true;
         }
     }
-    std::transform(normalized.begin(), normalized.end(), normalized.begin(), ::tolower);
-
-    return normalized;
+    return found;
 }
 
-bool matches(const std::string &pattern, const std::string &word)
+char getBestGuess(const Game& game, const unordered_set<char>& guessedLetters)
 {
-    if (pattern.length() != word.length()) return false;
-    for (size_t i = 0; i < pattern.length(); ++i)
+    unordered_map<char, int> letterFrequency;
+    for (size_t i = 0; i < game.target.size(); i++)
     {
-        if (pattern[i] != '*' && pattern[i] != word[i])
+        if (game.pattern[i] == '*' && guessedLetters.find(game.target[i]) == guessedLetters.end())
         {
-            return false;
+            letterFrequency[game.target[i]]++;
         }
     }
-    return true;
+    char bestGuess = ' ';
+    int maxFrequency = 0;
+    for (const auto& pair : letterFrequency)
+    {
+        if (pair.second > maxFrequency)
+        {
+            maxFrequency = pair.second;
+            bestGuess = pair.first;
+        }
+    }
+    return bestGuess;
 }
-
+void playGame(Game& game, int& totalAttempts)
+{
+    unordered_set<char> guessedLetters;
+    int attempts = 0;
+    while (game.pattern != game.target && totalAttempts < 1200)
+    {
+        char guess = getBestGuess(game, guessedLetters);
+        if (guess == ' ') break;
+        guessedLetters.insert(guess);
+        totalAttempts++;
+        if (!guessLetter(game, guess))
+        {
+            attempts++;
+        }
+    }
+}
 int main()
 {
-    std::locale::global(std::locale(""));
-    std::ifstream file("input.csv.txt");
-    std::string line;
-    int attemptCount = 0;
-
-    while (std::getline(file, line))
+    vector<Game> games = readCSV("input.csv.txt");
+    int totalAttempts = 0;
+    for (auto& game : games)
     {
-        std::stringstream ss(line);
-        std::string code, pattern, targetWord;
-
-        std::getline(ss, code, ';');
-        std::getline(ss, pattern, ';');
-        std::getline(ss, targetWord);
-        std::string normalizedPattern = normalize(pattern);
-        std::string normalizedTargetWord = normalize(targetWord);
-        if (matches(normalizedPattern, normalizedTargetWord))
-        {
-            std::cout << "Cuvantul numarul " << code << " gasit: " << targetWord << std::endl;
-        }
-
-        attemptCount++;
-        if (attemptCount >= 1200)
-        {
-            std::cout << "Numar maxim de incercari depasit!" << std::endl;
-            break;
-        }
+        playGame(game, totalAttempts);
     }
-
-    file.close();
+    cout << "Numartotal incercari: " << totalAttempts << endl;
     return 0;
 }
+
