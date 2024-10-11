@@ -82,7 +82,7 @@ int main()
     {
         playGame(game, totalAttempts);
     }
-    cout << "Numartotal incercari: " << totalAttempts << endl;
+    cout << "Numar total incercari: " << totalAttempts << endl;
     return 0;
 }
 
